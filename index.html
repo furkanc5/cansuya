@@ -233,9 +233,9 @@ function startSong(){
   songAudio.play().catch(()=>{});
   clearInterval(musicFadeTimer);
   musicFadeTimer=setInterval(()=>{
-    songAudio.volume=Math.min(.85,songAudio.volume+.05);
+    songAudio.volume=Math.min(.85,songAudio.volume+.03);
     if(songAudio.volume>=.85)clearInterval(musicFadeTimer);
-  },180);
+  },220);
 }
 
 function levelAtProgress(progress){
@@ -252,7 +252,7 @@ function announceLevel(level){
   levelPhoto.classList.remove("visible");
   void levelPhoto.offsetWidth;
   levelPhoto.classList.add("visible");
-  photoHoldUntil=Date.now()+1000;
+  photoHoldUntil=Date.now()+(level===1?500:1000);
   announcement.classList.remove("show");
   void announcement.offsetWidth;
   announcement.classList.add("show");
