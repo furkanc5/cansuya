@@ -44,6 +44,7 @@
   button:active {
     transform: translateY(0);
   }
+  button:disabled{opacity:.55;cursor:wait;transform:none;box-shadow:none}
 
   .value{
     text-align:center;font-size:24px;font-weight:800;min-height:30px;
@@ -122,6 +123,7 @@
     .value{font-size:18px;min-height:24px}
     .level-announcement{padding:0 8px 20px;font-size:clamp(28px,10vw,52px)}
     #levelPhoto{top:6%;width:min(230px,48vw)}
+    .chart-stage{width:calc(100vw - 36px);margin-left:50%;transform:translateX(-50%)}
     #finalMessage{padding:18px;font-size:clamp(22px,7vw,36px);gap:18px}
     #introMessage{font-size:clamp(21px,6vw,32px)}
     #secondMessage{gap:18px}
@@ -147,7 +149,7 @@
       <div class="level-announcement" id="announcement" aria-live="polite"></div>
     </div>
     <div class="controls">
-      <button id="play">Oynat ▶</button>
+      <button id="play" disabled>Oynat ▶</button>
       <div class="value" id="label">Başlangıç: Çok çok güzel</div>
     </div>
   </div>
@@ -203,6 +205,12 @@ const reels=[
   "linaaqaaa_1779287400_3901267990933624749_71488611741.mp4",
   "osmanavsarx_1781697524_3921484932961307971_2159666639.mp4"
 ];
+const photoPreloads=levelPhotos.map((photo)=>new Promise((resolve,reject)=>{
+  const image=new Image();
+  image.onload=resolve;
+  image.onerror=reject;
+  image.src=photo;
+}));
 let currentReel=0;
 let viewedReels=new Set();
 
@@ -214,6 +222,10 @@ let infinityStartTime = 0;
 let infinityStopped = false;
 let musicFadeTimer=null;
 let photoHoldUntil=0;
+
+Promise.all(photoPreloads).then(()=>{
+  play.disabled=false;
+});
 
 function startSong(){
   songAudio.volume=0.05;
@@ -258,7 +270,7 @@ function resizeInfinityCanvas(){
 
 function drawInfinityJourney(now){
   if(infinityStopped)return;
-  const W=innerWidth,H=innerHeight,margin=24;
+  const W=innerWidth,H=innerHeight,margin=4;
   const chartBox=canvas.getBoundingClientRect();
   const chartStart={x:chartBox.right-22,y:chartBox.top+28+chartBox.height*.02};
   const elapsed=now-infinityStartTime;
@@ -316,10 +328,10 @@ function drawInfinityJourney(now){
   infinityCtx.clearRect(0,0,W,H);
   infinityCtx.strokeStyle="rgba(255,71,126,.72)";infinityCtx.lineCap="round";infinityCtx.lineJoin="round";
   for(let completedLap=0;completedLap<lap;completedLap++){
-    drawRoute(routeForLap(completedLap),1,5+completedLap*1.5);
+    drawRoute(routeForLap(completedLap),1,10+completedLap*2.5);
   }
-  const current=drawRoute(routeForLap(lap),remaining/duration,5+lap*1.5);
-  infinityCtx.beginPath();infinityCtx.arc(current.x,current.y,10,0,Math.PI*2);
+  const current=drawRoute(routeForLap(lap),remaining/duration,10+lap*2.5);
+  infinityCtx.beginPath();infinityCtx.arc(current.x,current.y,14+lap,0,Math.PI*2);
   infinityCtx.fillStyle="#ff477e";infinityCtx.fill();
   infinityCtx.strokeStyle="#fff";infinityCtx.lineWidth=3;infinityCtx.stroke();
   requestAnimationFrame(drawInfinityJourney);
@@ -387,7 +399,15 @@ function draw(){
   ctx.font=`700 ${Math.max(9,Math.min(14,W/55)).toFixed(1)}px Nunito, Arial`;ctx.textAlign="center";
   const dateLabels=["10 Ağustos 2024","4 Eylül 2024","2 Ekim 2024","5 Ağustos 2026","4 Eylül 2026"];
   const datePositions=[0,.25,.5,.75,.9];
-  dateLabels.forEach((date,index)=>ctx.fillText(date,L+pw*datePositions[index],H-B+28));
+  const compactDates=["10 Ağu|2024","4 Eyl|2024","2 Eki|2024","5 Ağu|2026","4 Eyl|2026"];
+  dateLabels.forEach((date,index)=>{
+    const dateX=L+pw*datePositions[index];
+    if(W<600){
+      const lines=compactDates[index].split("|");
+      ctx.fillText(lines[0],dateX,H-B+22);
+      ctx.fillText(lines[1],dateX,H-B+35);
+    }else ctx.fillText(date,dateX,H-B+28);
+  });
   ctx.font="700 13px Nunito, Arial";ctx.fillText("...",W-R,H-B+28);
   // horizontal guides
   ctx.setLineDash([5,6]);ctx.lineWidth=1;ctx.strokeStyle="#e0e0e0";
