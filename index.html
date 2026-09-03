@@ -14,14 +14,14 @@
     min-height:100vh; display:flex; justify-content:center; align-items:center;
     overflow-x:hidden;
   }
-  .wrap{width:min(1250px,100%);padding:18px 14px 28px}
+  .wrap{width:min(1250px,100%);padding:clamp(12px,2vw,24px) clamp(8px,2vw,20px) 28px}
   h1{
     text-align:center;font-size:clamp(25px,6vw,50px);margin:0 0 16px;font-weight:900;
     color: #fff; text-shadow: 0 3px 6px rgba(0,0,0,0.15);
     letter-spacing: 1px;
   }
   .card{
-    border:none;border-radius:24px;padding:20px;
+    border:none;border-radius:24px;padding:clamp(10px,2vw,24px);overflow:hidden;
     background:rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(10px);
     box-shadow:0 15px 35px rgba(0,0,0,0.12);
@@ -58,7 +58,7 @@
     pointer-events:none;opacity:0;z-index:2;color:#ff477e;text-align:center;
     font-size:clamp(36px,8vw,86px);font-weight:900;text-shadow:0 4px 12px rgba(255,71,126,.25);
   }
-  .level-announcement.show{animation:levelArrives 1.25s cubic-bezier(.2,.8,.2,1) both}
+  .level-announcement.show{animation:levelArrives 1s cubic-bezier(.2,.8,.2,1) both}
   .level-announcement.final-level{animation:none;opacity:1}
   @keyframes levelArrives{
     0%{opacity:0;transform:scale(.55)}
@@ -68,6 +68,7 @@
   }
   #infinityCanvas{
     position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:10;
+    transition:opacity .35s ease;
   }
   #pinkTakeover{
     position:fixed;inset:0;background:#ff477e;opacity:0;pointer-events:none;z-index:9;
@@ -251,7 +252,7 @@ function announceLevel(level){
   levelPhoto.classList.remove("visible");
   void levelPhoto.offsetWidth;
   levelPhoto.classList.add("visible");
-  photoHoldUntil=Date.now()+(level===0?1000:500);
+  photoHoldUntil=Date.now()+1000;
   announcement.classList.remove("show");
   void announcement.offsetWidth;
   announcement.classList.add("show");
@@ -272,18 +273,20 @@ function drawInfinityJourney(now){
   if(infinityStopped)return;
   const W=innerWidth,H=innerHeight,margin=4;
   const chartBox=canvas.getBoundingClientRect();
-  const chartStart={x:chartBox.right-22,y:chartBox.top+28+chartBox.height*.02};
+  const chartSize=graphGeometry(chartBox.width,chartBox.height);
+  const chartStart={x:chartBox.left+chartSize.endX,y:chartBox.top+chartSize.endY};
   const elapsed=now-infinityStartTime;
-  let remaining=elapsed,lap=0,duration=2000;
+  let remaining=elapsed,lap=0,duration=1400;
   while(remaining>=duration){
     remaining-=duration;
     lap++;
-    duration=Math.max(180,duration*.68);
+    duration=Math.max(55,duration*.52);
   }
-  pinkTakeover.style.opacity=Math.min(1,lap/8).toFixed(2);
-  if(lap>=8){
+  pinkTakeover.style.opacity=Math.min(1,(lap+remaining/duration)/14).toFixed(2);
+  if(lap>=14){
     infinityStopped=true;
     infinityCtx.clearRect(0,0,W,H);
+    infinityCanvas.style.opacity="0";
     setTimeout(()=>{
       introMessage.classList.add("visible");
       finalMessage.classList.add("visible");
@@ -293,8 +296,8 @@ function drawInfinityJourney(now){
         setTimeout(()=>{
           firstMessage.classList.remove("visible");
           secondMessage.classList.add("visible");
-        },4500);
-      },5500);
+        },4000);
+      },8000);
     },1200);
     return;
   }
@@ -327,11 +330,12 @@ function drawInfinityJourney(now){
 
   infinityCtx.clearRect(0,0,W,H);
   infinityCtx.strokeStyle="rgba(255,71,126,.72)";infinityCtx.lineCap="round";infinityCtx.lineJoin="round";
+  const lineWidthForLap=routeLap=>Math.min(120,10*Math.pow(4,routeLap));
   for(let completedLap=0;completedLap<lap;completedLap++){
-    drawRoute(routeForLap(completedLap),1,10+completedLap*2.5);
+    drawRoute(routeForLap(completedLap),1,lineWidthForLap(completedLap));
   }
-  const current=drawRoute(routeForLap(lap),remaining/duration,10+lap*2.5);
-  infinityCtx.beginPath();infinityCtx.arc(current.x,current.y,14+lap,0,Math.PI*2);
+  const current=drawRoute(routeForLap(lap),remaining/duration,lineWidthForLap(lap));
+  infinityCtx.beginPath();infinityCtx.arc(current.x,current.y,14+lap*1.2,0,Math.PI*2);
   infinityCtx.fillStyle="#ff477e";infinityCtx.fill();
   infinityCtx.strokeStyle="#fff";infinityCtx.lineWidth=3;infinityCtx.stroke();
   requestAnimationFrame(drawInfinityJourney);
@@ -383,11 +387,17 @@ function resize(){
   canvas.style.height=h+"px"; canvas.width=w*dpr; canvas.height=h*dpr;
   ctx.setTransform(dpr,0,0,dpr,0,0); draw();
 }
+function graphGeometry(W,H){
+  const L=Math.max(78,W*.105),R=22,T=28,B=70;
+  const pw=W-L-R,ph=H-T-B,maxT=9.15;
+  const yMin=T+ph*.91,yTop=T+ph*.02;
+  const curveY=x=>yMin-((Math.exp(.55*x)-1)/(Math.exp(.55*maxT)-1))*(yMin-yTop);
+  return {L,R,T,B,pw,ph,maxT,yMin,yTop,curveY,endX:L+pw*.96,endY:curveY(maxT)};
+}
 function draw(){
   const W=canvas.clientWidth,H=canvas.clientHeight;
   ctx.clearRect(0,0,W,H);
-  const L=Math.max(78,W*.105), R=22, T=28, B=70;
-  const pw=W-L-R, ph=H-T-B;
+  const {L,R,T,B,pw,ph,maxT,curveY}=graphGeometry(W,H);
   
   ctx.strokeStyle="#4a4a4a";ctx.fillStyle="#4a4a4a";ctx.lineWidth=2;
 
@@ -396,7 +406,7 @@ function draw(){
   ctx.moveTo(L,H-B);ctx.lineTo(L,T);ctx.lineTo(L-7,T+12);ctx.stroke();
 
   // labels
-  ctx.font=`700 ${Math.max(9,Math.min(14,W/55)).toFixed(1)}px Nunito, Arial`;ctx.textAlign="center";
+  ctx.font=`700 ${Math.max(13,Math.min(18,W/55+4)).toFixed(1)}px Nunito, Arial`;ctx.textAlign="center";
   const dateLabels=["10 Ağustos 2024","4 Eylül 2024","2 Ekim 2024","5 Ağustos 2026","4 Eylül 2026"];
   const datePositions=[0,.25,.5,.75,.9];
   const compactDates=["10 Ağu|2024","4 Eyl|2024","2 Eki|2024","5 Ağu|2026","4 Eyl|2026"];
@@ -415,18 +425,23 @@ function draw(){
     const y=T+ph-(i/(levels.length-1))*ph;
     ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(W-R,y);ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font=`700 ${Math.max(11,Math.min(15,W/48)).toFixed(1)}px Nunito, Arial`;ctx.textAlign="right";ctx.fillStyle="#666";
-    if(i<=revealedLevel)ctx.fillText(levels[i],L-10,y+4);ctx.setLineDash([5,6]);
+    ctx.font=`700 ${Math.max(10,Math.min(15,W/48)).toFixed(1)}px Nunito, Arial`;ctx.textAlign="right";ctx.fillStyle="#666";
+    if(i<=revealedLevel){
+      const words=levels[i].split(" "),lines=[];let line="";
+      words.forEach(word=>{
+        const candidate=line?`${line} ${word}`:word;
+        if(W<600&&ctx.measureText(candidate).width>L-18&&line){lines.push(line);line=word;}
+        else line=candidate;
+      });
+      if(line)lines.push(line);
+      lines.forEach((text,lineIndex)=>ctx.fillText(text,L-10,y+4+lineIndex*12));
+    }
+    ctx.setLineDash([5,6]);
   }
   ctx.setLineDash([]);
 
   // exponential curve, clipped before final edge
-  const maxT=9.15, shown=Math.max(.15,progressValue/100*maxT);
-  const yMin=T+ph*.91, yTop=T+ph*.02;
-  function curveY(x){
-    const n=(Math.exp(.55*x)-1)/(Math.exp(.55*maxT)-1);
-    return yMin-n*(yMin-yTop);
-  }
+  const shown=Math.max(.15,progressValue/100*maxT);
   ctx.beginPath();ctx.lineWidth=5;ctx.strokeStyle="#ff477e";
   for(let x=0;x<=shown;x+=.035){
     const px=L+(x/maxT)*pw*.96, py=curveY(x);
