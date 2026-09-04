@@ -351,6 +351,8 @@ function startInfinityJourney(){
 function showReel(index,autoPlay=false){
   currentReel=(index+reels.length)%reels.length;
   viewedReels.add(currentReel);
+  reelVideo.muted=true;
+  reelVideo.volume=0;
   reelVideo.src=reels[currentReel];
   reelCounter.textContent=`${currentReel+1} / ${reels.length}`;
   if(viewedReels.size===reels.length){
@@ -376,6 +378,7 @@ reelVideo.onended=()=>{
 finishedReels.onclick=()=>{
   if(finishedReels.disabled)return;
   reelVideo.pause();
+  songAudio.play().catch(()=>{});
   reelsViewer.classList.remove("visible");
   playlistMessage.classList.add("visible");
 };
