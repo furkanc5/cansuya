@@ -155,7 +155,7 @@
     </div>
   </div>
 </div>
-<audio id="songAudio" src="olur-ya.mp3" preload="auto"></audio>
+<audio id="songAudio" src="assets/audio/olur-ya.mp3" preload="auto"></audio>
 <div id="pinkTakeover" aria-hidden="true"></div>
 <canvas id="infinityCanvas" aria-hidden="true"></canvas>
 <div id="finalMessage">
@@ -197,14 +197,14 @@ const reelsViewer=document.getElementById('reelsViewer'),reelVideo=document.getE
 const previousReel=document.getElementById('previousReel'),nextReel=document.getElementById('nextReel'),reelCounter=document.getElementById('reelCounter');
 const finishedReels=document.getElementById('finishedReels'),playlistMessage=document.getElementById('playlistMessage');
 const levels=["çok güzel","çok çokk güzel","müükemmelll","tarifi yok abiii","SINIRI DA YOK ∞"];
-const levelPhotos=["1.png","2.png","3.png","4.png","5.png"];
+const levelPhotos=["assets/images/1.png","assets/images/2.png","assets/images/3.png","assets/images/4.png","assets/images/5.png"];
 const reels=[
-  "cybereligion_1785538215_3953703288674216548_46420225921.mp4",
-  "efkan.sila_1784234588_3942767615151962633_63979279698.mp4",
-  "feritaltasll__1780408454_3910671769483326217_16372737126.mp4",
-  "lara.demirr09_1780764027_3913654093582020637_65877609461.mp4",
-  "linaaqaaa_1779287400_3901267990933624749_71488611741.mp4",
-  "osmanavsarx_1781697524_3921484932961307971_2159666639.mp4"
+  "assets/videos/cybereligion_1785538215_3953703288674216548_46420225921.mp4",
+  "assets/videos/efkan.sila_1784234588_3942767615151962633_63979279698.mp4",
+  "assets/videos/feritaltasll__1780408454_3910671769483326217_16372737126.mp4",
+  "assets/videos/lara.demirr09_1780764027_3913654093582020637_65877609461.mp4",
+  "assets/videos/linaaqaaa_1779287400_3901267990933624749_71488611741.mp4",
+  "assets/videos/osmanavsarx_1781697524_3921484932961307971_2159666639.mp4"
 ];
 const photoPreloads=levelPhotos.map((photo)=>new Promise((resolve,reject)=>{
   const image=new Image();
